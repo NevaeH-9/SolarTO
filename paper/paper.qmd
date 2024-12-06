@@ -1,12 +1,12 @@
 ---
 title: "Factors of First-Year Financial Savings in Solar Photovoltaic Systems: Data from Open Data Toronto and SolarOT Map"
-subtitle: "My subtitle if needed"
+subtitle: "Finding Factors Effect First Year Bill Savings: Multiple Linear Regression Model"
 author: 
   - Yuanchen Miao
 thanks: "Code and data are available at: [https://github.com/NevaeH-9/SolarTO](https://github.com/NevaeH-9/SolarTO)."
 date: today
 date-format: long
-abstract: "This paper examines the factors affect first-year financial savings for solar photovoltaic (PV) systems using data from Open Data Toronto and the SolarOT Map application. A multiple linear regression model identifies how variables such as payback period, roof size, system cost, electricity generation, and greenhouse gas (GHG) reduction influence initial bill savings. The analysis finds that payback period, roof size, and system cost are significant predictors of first-year savings, while electricity generation and GHG reduction are not. These findings clarify the financial and physical conditions that maximize early solar benefits that can help improve system design, inform policy, and accelerate the adoption of renewable energy technologies."
+abstract: "This paper examines the factors affect first-year financial savings for solar photovoltaic (PV) systems using data from Open Data Toronto and the SolarOT Map application. A multiple linear regression model identifies how variables such as payback period, roof size, system cost, electricity generation, and greenhouse gas (GHG) reduction influence initial bill savings. The analysis finds that payback period and system cost are significant predictors of first-year savings, while electricity generation has small influence and GHG reduction and roof size are not. These findings clarify the financial and physical conditions that maximize early solar benefits that can help improve system design, inform policy, and accelerate the adoption of renewable energy technologies."
 format:
   pdf:
     toc: true
@@ -28,6 +28,8 @@ library(knitr)
 library(kableExtra)
 library(modelsummary)
 library(broom)
+library(lmtest)
+library(patchwork)
 ```
 
 ```{r}
@@ -46,15 +48,15 @@ mlr_model <-
 
 # Introduction
 
-This study investigates the relationships between several key variables influencing the adoption of solar photovoltaic (PV) systems, utilizing data sourced from **Open Data Toronto** [@solarto] and the SolarOT Map application. A multiple linear regression model was developed to analyze the impact of predictors such as payback period, roof size800k, system cost, annual electricity generation, and annual ghg reduction on the response variable, first year bill savings. The research aims to identify the most significant factors affecting early financial benefits from solar PV installations, providing some ideas to people on deciding whether they choose to have a solar PV system.
+This study investigates the relationships between several key variables influencing the adoption of solar photovoltaic (PV) systems, utilizing data sourced from **Open Data Toronto** [@solarto] and the SolarOT Map application. A multiple linear regression model was developed to analyze the impact of predictors such as payback period, roof size800k, system cost, annual electricity generation, and annualGHG reduction on the response variable, first year bill savings. The research aims to identify the most significant factors affecting early financial benefits from solar PV installations, providing some ideas to people on deciding whether they choose to have a solar PV system.
 
-The primary estimand of this study is the average effect of predictors payback period, roof size, system cost, annual electricity generation, and annual ghg reduction on the expected first year bill savings. The model seeks to quantify how changes in these predictors influence the immediate financial benefits homeowners can expect during the first year of solar PV operation, adjusting for the unique characteristics of individual installations.
+The primary estimand of this study is the average effect of predictors payback period, roof size, system cost, annual electricity generation, and annual GHG reduction on the expected first year bill savings. The model seeks to quantify how changes in these predictors influence the immediate financial benefits homeowners can expect during the first year of solar PV operation, adjusting for the unique characteristics of individual installations.
 
-The multiple linear regression model reveals that payback period, roof size, and system cost are statistically significant predictors of first year bill savings. In contrast, annual electricity generation and annual ghg reduction do not show a significant relationship with the response variable. This indicates that, while system cost and roof area is very important in determining initial financial benefits, the overall electricity generation capacity and greenhouse gas reductions may have less direct influence on first year bill savings.
+The multiple linear regression model reveals that payback period and system cost are statistically significant predictors of first year bill savings. In contrast, annual electricity generation shows a small influence on response variable and roof size and annual GHG reduction do not show a significant relationship with the response variable. This indicates that, while system cost and payback period is very important in determining initial financial benefits, the overall electricity generation capacity and greenhouse gas reductions may have less direct influence on first year bill savings.
 
-Understanding the factors that affects the early financial benefits is important for people who decides to have a solar PV system, as many potential users prioritize immediate cost savings when making investment decisions. By highlighting the significance of variables like payback period, roof size800k, and system cost, this study provides idea for policymakers, manufacturers, and installers aiming to design cost-effective solar PV systems. Furthermore, the findings underscore the importance of tailoring incentives and educational efforts to emphasize the factors that most directly impact early financial returns, potentially accelerating the transition to sustainable energy solutions.
+Understanding the factors that affects the early financial benefits is important for people who decides to have a solar PV system, as many potential users prioritize immediate cost savings when making investment decisions. By highlighting the significance of variables like payback period, annual electricity generation, and system cost, this paper provides idea for policymakers, manufacturers, and installers aiming to design cost-effective solar PV systems. Furthermore, the findings underscore the importance of tailoring incentives and educational efforts to emphasize the factors that most directly impact early financial returns, potentially accelerating the transition to sustainable energy solutions.
 
-The rest of paper are structured as follows: @sec-data introduced the programming language that is used in this paper and packages are used to generate models, graphs and tables, and tidy the paper. The predictors are also introduced in the section. @sec-model is introducing the multiple linear regression model, the coefficients of each predictor. The result of the model is discussed in @sec-result.
+The rest of paper are structured as follows: @sec-data introduced the programming language that is used in this paper and packages are used to generate models, graphs and tables, and tidy the paper. The predictors are also introduced in the section. @sec-model is introducing the multiple linear regression model, the coefficients of each predictor and the model validation and justification. The result of the model is discussed in @sec-result. Overview of the paper, how first year bill saving encourage people to install solar system, why is solar PV system better than regular electricity generation and weakness and nextstep for this paper are discussed in @sec-discussion.
 
 
 
@@ -65,7 +67,12 @@ The rest of paper are structured as follows: @sec-data introduced the programmin
 
 ## Overview
 
-The statistical programming language **R** [@citeR] is used as a base of this paper. Packages **lubridate** [@lubridate], **dplyr** [@dplyr], **tidyverse** [@tidyverse] and **opendatatoronto** [@opendatatoronto] are used to download, clean the data and generate the multiple linear regression model. Package **ggplot2** [@ggplot2] has been used to make figures and labeling the graph. Packages **kableExtra** [@kable] and **broom** [@broom] have been used to generate tables for the paper. Package **modelsummary** [@modelsummary] has been used to summary the model. The data was downloaded from Open Data Toronto that refreshed daily and collected using SolarTO Map. With the cleaning process, observations with NA values and address that is not found by the software are removed from the data set. Multiple linear regression model are being used to find the relationship between first year bill savings with other factors.
+The statistical programming language **R** [@citeR] is used as a base of this paper. Packages **lubridate** [@lubridate], **dplyr** [@dplyr], **tidyverse** [@tidyverse] and **opendatatoronto** [@opendatatoronto] are used to download, clean the data and generate the multiple linear regression model. Packages **ggplot2** [@ggplot2] and **gridExtra** [@gridExtra] has been used to make figures and labeling the graph. Packages **kableExtra** [@kable] and **broom** [@broom] have been used to generate tables for the paper. Package **modelsummary** [@modelsummary] has been used to summary the model. Package **lmtest** [@lmtest] has been used to provide test for model validation. The data was downloaded from Open Data Toronto that refreshed daily and collected using SolarTO Map. With the cleaning process, observations with NA values and address that is not found by the software are removed from the data set. Multiple linear regression model are being used to find the relationship between first year bill savings with other factors.
+
+## Clean Data
+
+Some data points in the variables system size, system cost, annual electricity generation, and annual GHG reduction were identified as significantly higher than the majority of the recorded values. These data points were classified as outliers and excluded from the dataset to ensure a more robust analysis. To investigate the relationship between first-year bill savings and other predictors, only observations with values below the mean for system size, system cost, annual electricity generation, and annual GHG reduction were retained. The original dataset contained 522,428 observations, which were reduced to a subset of 5,000 observations to optimize computational efficiency during model training. Additionally, observations where system size equals zero were removed from the dataset. A system size of zero indicates that the roof of the building is not suitable for installing a solar PV system. As these observations do not contribute to identifying the relationship between the predictors and the response variable, they were excluded from the analysis.
+
 ## Measurement
 	
 The data set is downloaded from **Open Data Toronto** [@solarto], a website that post data collected in Toronto City can be used and re-published as everyone wish freely that the website is aiming to make data innovated by anyone to draw insights and use evidence to inform the design of civic services. The raw data is collected by using SolarTO Map, a Geographic Information Systems analysis of Light Detection and Ranging data. The software takes into account geographical latitude and the sun's daily position throughout the year. By using SolarTO Map, people are able to find out that the data of the roof area they could put a device and how much solar energy it could generate and how much money they are saving by using the solar energy device by selecting the area they are looking for. First several rows of cleaned data is in @tbl-cleandata-rows
@@ -77,12 +84,13 @@ The data set is downloaded from **Open Data Toronto** [@solarto], a website that
 #| warning: false
 #| message: false
 
+short_col_names <- c('ID', 'Elec.Gen.', 'Bill Savings', 
+                     'System Size', 'Payback', 'GHG Reduc.', 
+                     'Roof Size', 'System Cost')
+
 analysis_data |>
   head(4) |>
-  kable(
-    col.names = c('structureid', 'annual_electricity_generation_k', 'first_year_bill_savings', 'system_size', 'payback_period', 'annual_ghg_reduction_kg', 'roof_size800k', 'system_cost'),
-    booktabs = TRUE
-  )
+  kable(col.names = short_col_names, booktabs = TRUE)
 ```
 
 ## Outcome variables
@@ -104,29 +112,58 @@ The outcome variable in this paper is first year bill savings that it represents
 **System Cost(system_cost)**: The upfront cost of the solar PV system in dollars. The System Cost is based on the System Size and the average solar installation rates in Toronto. A estimated $/Watt rate ranging from $3/watt to $2,2/watt (dependent on system size) is applied to calculate cost.
 
 ```{r}
-#| label: fig-SSAEG
-#| fig-cap: "Distribution of System Size and Annual Electricity Generation"
+#| label: fig-SC
+#| fig-cap: "Distribution the Majority of System Cost "
 #| echo: false
 #| warning: false
 
-g1 <- ggplot(analysis_data, aes(x = system_size, y = annual_electricity_generation_k)) +
-  geom_point(alpha = 0.6, color = "blue") +
+# Calculate the mean of system_cost
+mean_system_cost <- mean(analysis_data$system_cost, na.rm = TRUE)
+
+# Filter rows where system_cost is below the mean
+filtered_data <- analysis_data %>%
+  filter(system_cost < mean_system_cost)
+
+
+# Load necessary library
+library(ggplot2)
+
+# Create the bar plot for system_cost in the filtered data
+ggplot(filtered_data, aes(x = system_cost)) +
+  geom_bar(fill = "skyblue", color = "black") +
   labs(
-    x = "System Size",
-    y = "Annual Electricity Generation(kwh)"
+    title = "Distribution of System Cost Below the Mean",
+    x = "System Cost",
+    y = "Count of Structures"
+  ) +
+  theme_minimal()
+
+```
+```{r}
+#| label: fig-SSAEG
+#| fig-cap: "Distribution of System Size and Annual GHG reduction"
+#| echo: false
+#| warning: false
+
+g1 <- ggplot(analysis_data, aes(x = annual_electricity_generation_k, y = annual_ghg_reduction_kg)) +
+  geom_point(alpha = 0.6, color = "red") +
+  labs(
+    x = "Annual Electricity Generation",
+    y = "Annual GHG Reduction(kg)"
   ) +
   theme_minimal() +
   scale_y_log10()
 
 g1
 ```
+
 ```{r}
 #| label: fig-SSAE
 #| fig-cap: "Distribution of System Size and Annual GHG reduction"
 #| echo: false
 #| warning: false
 
-g2 <- ggplot(analysis_data, aes(x = system_size, y = annual_ghg_reduction_kg)) +
+g2 <- ggplot(analysis_data, aes(x = system_cost, y = annual_ghg_reduction_kg)) +
   geom_point(alpha = 0.6, color = "red") +
   labs(
     x = "System Size",
@@ -176,7 +213,6 @@ g4 <- ggplot(analysis_data, aes(x = system_size, y = payback_period)) +
 g4
 ```
 
-
 The roof size refers to the total area capable of receiving at least 800 kWh of solar radiation per square meter. To maximize the efficiency of the solar photovoltaic (PV) system, it is assumed that the entire roof area will be utilized for system installation. It is further assumed that as the roof size increases, the system size will also increase proportionally. As demonstrated in @fig-SSAEG and @fig-SSAE, there is a clear positive relationship between system size, annual electricity generation, and annual greenhouse gas (GHG) reduction. Specifically, larger PV systems generate more electricity than smaller systems, leading to a reduction in electricity consumption from alternative sources. Consequently, this results in a greater annual GHG reduction for larger systems.
 
 In @fig-roof and @fig-roo, it is observed that the payback period is not directly correlated with system size. While the cost of larger systems is higher, these systems also generate more electricity, leading to greater savings on electricity bills. However, the number of years required to recover the initial investment through bill savings remains relatively consistent, regardless of system size.
@@ -190,8 +226,14 @@ Here we briefly describe the multiple linear regression model used to investigat
 
 ## Model set-up
 $$
-\text{Annual Billing Savings} = \beta_0 + \beta_1 \cdot \text{system size} + \beta_2 \cdot \text{paybackperiod} + \beta_3 \cdot \text{system cost} + \beta_4 \cdot \text{annual electricity generation} + \beta_5 \cdot \text{annual ghg reduction}
+\small
+\text{Annual Billing Savings} = \beta_0 + \beta_1 \cdot \text{system size} + \beta_2 \cdot \text{payback period} + \beta_3 \cdot \text{system cost} 
 $$
+$$
+\small
++ \beta_4 \cdot \text{annual electricity generation} + \beta_5 \cdot \text{annual GHG reduction}
+$$
+
 
 - $\beta_0$ is the intercept of the multiple linear regression model, which represents the value of annual billing savings when other predictors are zero
 - $\beta_1$ is the coefficient of **system size** that represents the effect of adding system size on annual billing savings
@@ -199,6 +241,99 @@ $$
 - $\beta_3$ is the coefficient of **system cost** that represents how much of adding a a dollar has effect on system cost on annual billing savings
 - $\beta_4$ is the coefficient of **annual electricity generation** that represents the change of annual billing savings when one kWh electricity is generated by the solar PV system
 - $\beta_5$ is the coefficient of **annual ghg reduction** that represents the change of annual billing savings when one kg carbon dioxide is reducted by using the solar PV system
+
+## Model Justification
+
+In this paper, a multiple linear regression model is used to predict first year bill savings. Payback period is included as a predictor because it reflects the time required to recover the investment in the solar system, which is an essential consideration for prospective solar adopters. This variable is expected to have a direct relationship with bill savings, as shorter payback periods generally correlate with higher savings. Roof size and system size are selected from raw data to be predictors since a larger roof area allows for the installation of a more extensive solar system, and larger system size. Both of these predictors indicate more electricity is generated from the system, leads to higher billing savings. System cost and annual electricity generation are included as they directly influence the savings generated, with a more expensive system generally producing more electricity and offering a greater savings. Annual GHG reduction is also relevant since it is a proxy for the environment impact of a solar system, with larger reductions correlating with more substantial savings due to reduced reliance on non-renewable energy sources.
+
+## Model Assumptions and Validation
+
+- **Linearity**: Assumes a linear relationship between predictors and the response variable. 
+- **Homoscedasticity**: Residuals are having constant variance.
+- **Independence**: Residuals are independent of each other.
+- **Normality of Errors**: Residuals are normally distributed
+
+```{r}
+#| label: fig-residual
+#| fig-cap: "Residual Plot of Multiple Linear Regression Model"
+#| echo: false
+#| warning: false
+
+
+ggplot(data = analysis_data, aes(x = system_size, y = residuals(mlr_model))) +
+  geom_point() +
+  labs(y = "Residuals") + # Keep the y-axis label
+  theme_minimal() + 
+  theme(axis.title.x = element_blank()) # Remove x-axis label
+
+
+```
+In @fig-residual, we can inspect the relationship between the residuals and fitted values. The scatter plot of residuals versus fitted value shows no pattern on the graph but some of the outliers. It still shows that the model has the linearity assumption not violated
+
+```{r}
+#| label: tbl-bptest
+#| tbl-cap: Breusch-Pagan Test for Homoscedasticity
+#| echo: false
+#| warning: false
+#| message: false
+
+bptest_result <- bptest(mlr_model)
+
+# Extract relevant results from the test
+bptest_table <- data.frame(
+  Statistic = bptest_result$statistic,
+  p_value = bptest_result$p.value
+)
+
+# Create a kable table
+kable(bptest_table, col.names = c("Statistic", "p-value"), 
+      booktabs = TRUE)
+```
+Homoscedaticity assumes constant variance of residuals across all levels of the independent variables. The plot of residuals versus fitted values shows the identity but we can further use the Breusch-Pagan test to check for homoscedasticity. The null hypothesis of the Breusch-Pagan test is that there is constant variance. A p-value above 0.05 indicates that homoscedasticity holds. From @tbl-bptest, it shows that we are having the p-value as zero which indicates that the model fails on the homoscedasticity test.
+```{r}
+#| label: tbl-dwtest
+#| tbl-cap: Durbin-Watson Test for Autocorrelation
+#| echo: false
+#| warning: false
+#| message: false
+
+dwtest_result <- dwtest(mlr_model)
+
+# Extract relevant results from the test
+dwtest_table <- data.frame(
+  Statistic = dwtest_result$statistic,
+  p_value = dwtest_result$p.value
+)
+
+# Create a kable table
+kable(dwtest_table, col.names = c("Statistic", "p-value"), 
+      booktabs = TRUE)
+```
+
+To check for independence of residuals, I am using the Durbin-Watson test for autocorrelation, which tests whether residuals are correlated. A p-value greater than 0.05 suggests that the residuals are independent. From @tbl-dwtest, we are having a p-value 0.76 which is greater than 0.05, thus, residuals are independent.
+
+```{r}
+#| label: fig-qq
+#| fig-cap: "Histogram and Q-Q Plot of Multiple Linear Regression Model"
+#| echo: false
+#| warning: false
+
+qqnorm(residuals(mlr_model))
+qqline(residuals(mlr_model), col = "red")
+```
+
+
+```{r}
+#| label: fig-hist
+#| fig-cap: "Histogram and Q-Q Plot of Multiple Linear Regression Model"
+#| echo: false
+#| warning: false
+
+
+hist(residuals(mlr_model), main = "Histogram of Residuals", xlab = "Residuals")
+
+```
+To check if the residuals are normally distributed, we are using the Q-Q plot and histogram of residuals. If the residuals follow a normal distribution, the points in the Q-Q plot should lie along a straight line, and the histogram should resemble a bell shaped curve. In @fig-qq, the Q-Q plot is not a straight line and in @fig-hist the histogram is showing as a rectangle shape. These two graphs indicates that the model is not normally distributed.
 
 
 # Result{#sec-result}
@@ -213,44 +348,130 @@ $$
 model_summary <- tidy(mlr_model)
 
 # Print the summary table
-print(model_summary)
+kable(model_summary)
 ```
 
-As shown in @tbl-model-summary, payback period, roof size and system cost are very significant to the annual billing savings, as they are having the p-value equal to zero and annual electricity generation and annual ghg reduction are having p-value larger than 0.5 that these two predictors should be removed from the multiple linear regression model since they are not having a lot of influence on the money saved when the solar PV system is placed on the roof. Payback period has large negative estimate -315.06846232, it is representing that with a year of payback period added, the annual billing savings is significantly decreased, the roof size is having the only positive estimate in significant 
+As shown in @tbl-model-summary the summary of the model, the predictor payback period has a $p-value < 2 \times 10^{-16}$ and an estimate -112.40506927 indicates that it has a strong negative relationship suggests shorter payback periods are associated with greater first-year billing savings. System cost also has a $p-value < 2 \times 10^{-16}$ and has estimate equals to 0.04678 which indicates that it has a positive relationship with the response variable, higher system cost tend to generate more first-year savings.
+
+Annual electricity generation has a p-value $ 0.0338 < 0.05$ that it has a weaker positive association suggests that the more electricity the system saves, more first year bill saving is obtained.
+
+Predictors roof size ($p-value = 0.1882$) and annual GHG reduction ($p-value = 0.6953$) are both having $p-value > 0.05$. These two predictors are not strongly associated with the response variable in this dataset.
+
+Predictor system size is showing NA in the summary of the model that it is not estimable due to singularities. System size is dependent with one of other predictors, thus, system size should be removed as a predictor in the model.
 
 
+# Discussion{#sec-discussion}
 
-# Discussion
+## Overview of Paper {#sec-first-point}
 
-## First discussion point {#sec-first-point}
+In this paper, I investigates the relationship between various factors affecting the first-year bill savings from solar photovoltaic (PV) systems. Using data collected from the SolarOT Map app and Open Data Toronto, the paper applies a multiple linear regression (MLR) model to predict the first-year bill savings based on several key predictors. These predictors include payback period, roof size, system cost, annual electricity generation, and annual GHG reduction. The model is carefully constructed and validated to identify which factors have the most significant influence on the savings achieved by installing a solar PV system. Significance of each predictor are explored through statistical analysis and model diagnostics, including tests for linearity, homoscedasticity, normality of residuals and independence.
 
-If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
+## How First Year Bill Saving Encourage People to Install Solar PV System
 
-## Second discussion point
+First year bill savings are a key factor that can motivate individuals to install solar PV systems. These savings directly impact the financial benefits of adopting solar energy by lowering electricity costs, making the initial investment more attractive. Many homeowners and businesses are attracted to the potential for immediate savings on their energy bills. When they see a reduction in they utility costs in the first year of installation, it provides a quick return on investment, making the decision to install solar more appealing. This early financial benefit can offset the initial costs associated with purchasing and installing a solar PV system..
 
-Please don't use these as sub-heading labels - change them to be what your point actually is.
+The first year savings help to speed up the recovery of the upfront cost of the solar system. If the savings in the first year are significant enough, it can shorten the payback period. The faster people can recoup their investment, the more likely they are to proceed with installation.
 
-## Third discussion point
+The promise of tangible first year saving can lower the perceived financial risk of investing in solar energy. Potential adopters may feel more secure in their decision if they can expect visible financial returns. This can be especially important for people who are cautious about making large investments in new technologies.
 
-## Weaknesses and next steps
+## Solar PV System versus Regular Electricity Generator
 
-Weaknesses and next steps should also be included.
+Solar PV systems have become increasingly advantageous in today's world due to several key factors. Solar PV systems help reduce reliance on fossil fuels, which are the primary contributors to greenhouse gas emissions. By generating electricity by solar energy, it is changing and reducing global warming potential. Unlike fossil fuels, solar energy is inexhaustible. The sun provides an enormous amount of energy, and harnessing it through solar PV systems does not deplete natural resources, making it a sustainable solution for the long term.
+
+The cost of installing solar PV systems has decreased significantly over the past few years due to technological advancements, economies of scale, and government incentives. This makes solar energy more affordable and accessible to a wider range of people and businesses. Solar PV systems can significantly reduce electricity bills by generating energy on-site. This leads to lower utility costs and can provide long-term savings. Additionally, surplus energy can often be sold back to the grid, further reducing cost or even generating income.
+
+Solar PV systems allow homes and business to generate their own electricity, reducing reliance on the public power grid. This is beneficial during power outages or times of high demand when grid stability maybe at risk. By integrating solar energy with battery storage solutions, users can ensure a more reliable and self-sufficient energy supply, even during grid failures. This enhances energy security and resilience, particularly in remote areas or regions prone to natural disasters.
+
+Solar PV system also have a lifespan of 25-30 years or more with minimal maintenance. This makes them a long-term investment that can continue to generate savings over time, especially as utility prices rise. Homes with solar panels are often valued higher than those without, as potential buyers recognize the value of reduced energy bills and energy independence. Solar PV systems can contribute to increasing property value.
+
+## Weaknesses and Next Steps
+
+In the model, system size is a predictor I considered it will have influence on first year bill saving but it is correlated with other predictors that it shows NA on model summary.
+
+For future research, I would investigate on which building has solar PV system installed. By having data of buildings with solar PV system and combine with the data I obtained from Open Data Toronto, it is possible to build a Bayesian regression model to predict buildings people are more willing to 
+install a solar PV system.
 
 \newpage
 
+
 \appendix
 
-# Appendix {-}
+# Appendix {#sec-Appendix}
 
 
 # Additional data details
 
-# Model details {#sec-model-details}
+```{r}
+#| label: tbl-rawdata
+#| tbl-cap: Summary Table of Raw Data Columns
+#| echo: false
+#| warning: false
+#| message: false
 
-## Posterior predictive check
+# Create a data frame with column names and descriptions
+column_summary <- data.frame(
+  Column_Name = c("structureid", "annual_electricity_generation_k", "first_year_bill_savings", 
+                  "system_size", "payback_period", "annual_ghg_reduction_kg", 
+                  "roof_size800k", "system_cost"),
+  Description = c("Unique identifier for the structure (e.g., a building or house).", 
+                  "The annual electricity generated by the solar PV system, in kilowatt-hours (kWh).", 
+                  "The savings on electricity bills in the first year of solar PV system operation.", 
+                  "The size of the solar PV system, typically measured in kW (kilowatts).", 
+                  "The number of years required to recover the cost of the solar PV system through savings.", 
+                  "The amount of greenhouse gas (GHG) emissions reduced annually by the solar PV system, in kilograms (kg).", 
+                  "The total roof area of the building that can receive at least 800 kWh of solar radiation per square meter.", 
+                  "The total cost of installing the solar PV system.")
+)
+
+# Create a summary table using kable
+kable(column_summary, col.names = c('Column Name', 'Description'), booktabs = TRUE)
+
+```
 
 
-## Diagnostics
+# How SolarTO Map Calculate Data
+
+**Input Data**
+
+- **Geospatial Data**: Roof geometry, slope, and orientation are derived from high-resolution satellite imagery and LiDAR data. These datasets enable accurate modeling of the roof area and its suitability for solar panels.
+
+- **Solar Radiation Data**: Hourly solar irradiance values are collected from historical weather datasets. These measurements are adjusted for local conditions such as cloud cover, seasonal variations, and shading.
+
+- **Shading Analysis**: The tool employs algorithms to estimate shading from nearby structures, trees, and other obstructions. Shading reduces solar panel efficiency and affects electricity generation estimates.
+
+**Annual Electricity Generation**:
+
+The annual electricity generation $E_{\text{gen}}$ is estimated using the formula:
+
+$$
+E_{\text{gen}} = A \cdot G \cdot \eta
+$$
+
+Where:
+- $A$is the usable roof area $m^2$.
+- $G$ is the solar irradiance $\text{kWh}/m^2/\text{year}$.
+- $\eta$ is the solar panel efficiency.
+
+**System Cost**: The estimated system cost is calculated by multiplying the system size by the cost per kilowatt. The cost per kilowatt is derived from market averages and may include incentives or rebates offered by government programs.
+
+**Payback Period**:
+
+$$
+\text{Payback Period} = \frac{\text{Total System Cost}}{\text{Annual Savings}}
+$$
+Where annual savings include reductions in electricity bills due to solar energy generation. The tool assumes average electricity prices and utility rate structures.
+
+**First-Year Bill Savings**: The first-year bill savings are calculated based on the amount of electricity generated in the first year and the average cost of electricity. Adjustments are made for seasonal variations in energy consumption and local utility rates.
+
+**Annual GHG Reduction**:The annual GHG reduction is calculated by estimating the emissions avoided when electricity from solar replaces electricity from fossil fuels.
+
+$$
+\text{GHG Reduction} = E_{\text{gen}} \cdot E_{\text{factor}}
+$$
+
+Where:
+- $E_{\text{gen}}$ is the annual electricity generation.
+- $E_{\text{factor}}$ is the emission factor, reresenting the amount of carbon dioxide avoided per kWh of electricity granted by solar PV system.
 
 
 \newpage

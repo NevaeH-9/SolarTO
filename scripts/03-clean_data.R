@@ -14,7 +14,12 @@ library(lubridate)
 #### Clean data ####
 raw_data <- read_csv("data/01-raw_data/raw_data.csv")
 raw_data$structureid <- gsub(" - ", " ", raw_data$structureid)
-raw_data <- head(raw_data, 5000)
+#raw_data <- head(raw_data, 5000)
+mean_system_cost <- mean(analysis_data$system_cost, na.rm = TRUE)
+mean_annual_electricity_generation_k <- mean(analysis_data$annual_electricity_generation_k, na.rm = TRUE)
+mean_system_size <- mean(analysis_data$system_size, na.rm = TRUE)
+mean_annual_ghg_reduction_kg <- mean(analysis_data$annual_ghg_reduction_kg, na.rm = TRUE)
+mean_roof_size800k <- mean(analysis_data$roof_size800k, na.rm = TRUE)
 
 cleaned_data <- 
   raw_data |>
@@ -22,6 +27,15 @@ cleaned_data <-
   na.omit(raw_data)%>%
   dplyr::select(structureid, annual_electricity_generation_k, first_year_bill_savings, system_size,payback_period,annual_ghg_reduction_kg, roof_size800k, system_cost)%>%
   filter(!grepl("Building Address Not Found", structureid, ignore.case = TRUE))
+filtered_data <- cleaned_data %>%
+  filter(system_size != 0)
 
+filtered_data <- filtered_data %>%
+  filter(system_cost < mean_system_cost) %>%
+  filter(annual_electricity_generation_k < mean_annual_electricity_generation_k) %>%
+  filter(annual_ghg_reduction_kg < mean_annual_ghg_reduction_kg) %>%
+  filter(system_size < mean_system_size)
+
+filtered_data <- head(filtered_data,5000)
 #### Save data ####
-write_csv(cleaned_data, "data/02-analysis_data/analysis_data.csv")
+write_csv(filtered_data, "data/02-analysis_data/analysis_data.csv")

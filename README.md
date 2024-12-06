@@ -7,7 +7,7 @@ This repo examines the factors affect first-year financial savings for solar pho
 
 The repo is structured as follows:
 
--   `data` contains all data
+-   `data` contains all data except raw data, raw data is too large to push to upload to git hub
 -   `models` contains the multiple linear regression model that is fitted
 -   `other` contains details about LLM chat interactions, sketches, and a datasheet for the raw data.
 -   `paper` contains the files used to generate the paper, including the Quarto document and reference bibliography file, as well as the PDF of the paper. 
@@ -15,4 +15,4 @@ The repo is structured as follows:
 
 ## Statement on LLM Usage
 
-Including code for unit testing, data cleaning, and data visualization, were created with the assistance of ChatGPT 4o. The details of these interactions are recorded in `other/llm/usage.txt`.
+ChatGPT 4o was used to generate part of R code for analyzing and graphing. The entire chat history is available in other/llm/usage.txt

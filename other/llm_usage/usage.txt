@@ -1701,3 +1701,95 @@ Copy code
 The SolarTO dataset is a valuable resource for solar energy research [@solarto].
 Output
 When you render the document, Quarto will automatically format the citation and add it to the references section of your document.
+how to make a kable for bptest
+ChatGPT said:
+ChatGPT
+To create a kable table for the results of the Breusch-Pagan test (bptest), you can first extract the results of the test and then format them into a table. Here's how you can do it in R:
+
+Steps:
+Run the bptest on your model.
+Capture the results into a data frame.
+Use knitr::kable to create a nicely formatted table.
+Here’s an example code:
+
+r
+Copy code
+# Load necessary libraries
+library(lmtest)
+library(knitr)
+
+# Fit the model
+mlr_model <- lm(first_year_bill_savings ~ payback_period + roof_size800k + 
+                 system_cost + annual_electricity_generation_k + system_size + 
+                 annual_ghg_reduction_kg, data = analysis_data)
+
+# Perform Breusch-Pagan Test
+bptest_result <- bptest(mlr_model)
+
+# Extract relevant results from the test
+bptest_table <- data.frame(
+  Statistic = bptest_result$statistic,
+  p_value = bptest_result$p.value
+)
+
+# Create a kable table
+kable(bptest_table, col.names = c("Statistic", "p-value"), 
+      caption = "Breusch-Pagan Test for Homoscedasticity", 
+      booktabs = TRUE)
+Explanation:
+Fit the model (mlr_model).
+Run bptest to test for homoscedasticity.
+Extract the statistic and p-value from the test result.
+Create a data frame to store the results, and then use kable from the knitr package to display the results in a table format.
+Output Example:
+The table produced by kable will look something like this (when rendered in an R Markdown document):
+
+Statistic	p-value
+0.876	0.349
+This provides a clean, formatted presentation of the Breusch-Pagan test results.
+table for dw test
+ChatGPT said:
+ChatGPT
+To create a table for the Durbin-Watson test (dwtest), you can follow a similar approach to the Breusch-Pagan test. Here’s how you can extract the results from dwtest and present them in a table using knitr::kable:
+
+Steps:
+Run the dwtest on your model.
+Capture the results into a data frame.
+Use knitr::kable to create a formatted table.
+Here’s an example:
+
+r
+Copy code
+# Load necessary libraries
+library(lmtest)
+library(knitr)
+
+# Fit the model
+mlr_model <- lm(first_year_bill_savings ~ payback_period + roof_size800k + 
+                 system_cost + annual_electricity_generation_k + system_size + 
+                 annual_ghg_reduction_kg, data = analysis_data)
+
+# Perform Durbin-Watson Test
+dwtest_result <- dwtest(mlr_model)
+
+# Extract relevant results from the test
+dwtest_table <- data.frame(
+  Statistic = dwtest_result$statistic,
+  p_value = dwtest_result$p.value
+)
+
+# Create a kable table
+kable(dwtest_table, col.names = c("Statistic", "p-value"), 
+      caption = "Durbin-Watson Test for Autocorrelation", 
+      booktabs = TRUE)
+Explanation:
+Fit the model (mlr_model).
+Run dwtest to test for autocorrelation.
+Extract the statistic and p-value from the test result.
+Create a data frame to store the results, and then use kable from the knitr package to display the results in a table format.
+Output Example:
+The table produced by kable will look something like this (when rendered in an R Markdown document):
+
+Statistic	p-value
+1.248	0.163
+This provides a clean, formatted presentation of the Durbin-Watson test results.
