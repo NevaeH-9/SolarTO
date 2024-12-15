@@ -9,9 +9,6 @@ format: pdf
 bibliography: references.bib
 ---
 
-Extract of the questions from @gebru2021datasheets.
-
-
 **Motivation**
 
 1. *For what purpose was the dataset created? Was there a specific task in mind? Was there a specific gap that needed to be filled? Please provide a description.*
