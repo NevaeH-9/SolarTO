@@ -3,23 +3,24 @@
 # Author: Yuanchen Miao
 # Date: 3 December 2024
 # Contact: vincent.miao@mail.utoronto.ca
-# Pre-requisites: The `tidyverse`, `dplyr`, `lubridate` packages must be installed
+# Pre-requisites: The `tidyverse`, `dplyr`, `lubridate` and 'arrow' packages must be installed
                   #The raw data must be downloaded and saved
+
 
 #### Workspace setup ####
 library(tidyverse)
 library(dplyr)
 library(lubridate)
+library(arrow)
 
 #### Clean data ####
 raw_data <- read_csv("data/01-raw_data/raw_data.csv")
 raw_data$structureid <- gsub(" - ", " ", raw_data$structureid)
-#raw_data <- head(raw_data, 5000)
-mean_system_cost <- mean(analysis_data$system_cost, na.rm = TRUE)
-mean_annual_electricity_generation_k <- mean(analysis_data$annual_electricity_generation_k, na.rm = TRUE)
-mean_system_size <- mean(analysis_data$system_size, na.rm = TRUE)
-mean_annual_ghg_reduction_kg <- mean(analysis_data$annual_ghg_reduction_kg, na.rm = TRUE)
-mean_roof_size800k <- mean(analysis_data$roof_size800k, na.rm = TRUE)
+mean_system_cost <- mean(raw_data$system_cost, na.rm = TRUE)
+mean_annual_electricity_generation_k <- mean(raw_data$annual_electricity_generation_k, na.rm = TRUE)
+mean_system_size <- mean(raw_data$system_size, na.rm = TRUE)
+mean_annual_ghg_reduction_kg <- mean(raw_data$annual_ghg_reduction_kg, na.rm = TRUE)
+mean_roof_size800k <- mean(raw_data$roof_size800k, na.rm = TRUE)
 
 cleaned_data <- 
   raw_data |>
@@ -38,4 +39,4 @@ filtered_data <- filtered_data %>%
 
 filtered_data <- head(filtered_data,5000)
 #### Save data ####
-write_csv(filtered_data, "data/02-analysis_data/analysis_data.csv")
+write_parquet(filtered_data, "data/02-analysis_data/analysis_data.parquet")
