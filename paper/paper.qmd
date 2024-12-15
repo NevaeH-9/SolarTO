@@ -30,6 +30,7 @@ library(modelsummary)
 library(broom)
 library(lmtest)
 library(patchwork)
+library(arrow)
 ```
 
 ```{r}
@@ -38,7 +39,7 @@ library(patchwork)
 #| message: false
 
 # Load analysis data
-analysis_data <- read_csv(here::here("data/02-analysis_data/analysis_data.csv"))
+analysis_data <- read_parquet(here::here("data/02-analysis_data/analysis_data.parquet"))
 
 # Load model
 mlr_model <-
@@ -67,7 +68,7 @@ The rest of paper are structured as follows: @sec-data introduced the programmin
 
 ## Overview
 
-The statistical programming language **R** [@citeR] is used as a base of this paper. Packages **lubridate** [@lubridate], **dplyr** [@dplyr], **tidyverse** [@tidyverse] and **opendatatoronto** [@opendatatoronto] are used to download, clean the data and generate the multiple linear regression model. Packages **ggplot2** [@ggplot2] and **gridExtra** [@gridExtra] has been used to make figures and labeling the graph. Packages **kableExtra** [@kable] and **broom** [@broom] have been used to generate tables for the paper. Package **modelsummary** [@modelsummary] has been used to summary the model. Package **lmtest** [@lmtest] has been used to provide test for model validation. The data was downloaded from Open Data Toronto that refreshed daily and collected using SolarTO Map. With the cleaning process, observations with NA values and address that is not found by the software are removed from the data set. Multiple linear regression model are being used to find the relationship between first year bill savings with other factors.
+The statistical programming language **R** [@citeR] is used as a base of this paper. Packages **lubridate** [@lubridate], **dplyr** [@dplyr], **tidyverse** [@tidyverse] and **opendatatoronto** [@opendatatoronto] are used to download, clean the data and generate the multiple linear regression model. Packages **ggplot2** [@ggplot2] and **gridExtra** [@gridExtra] has been used to make figures and labeling the graph. Packages **kableExtra** [@kable] and **broom** [@broom] have been used to generate tables for the paper. Package **modelsummary** [@modelsummary] has been used to summary the model. Package **lmtest** [@lmtest] has been used to provide test for model validation. Package **arrow** [@arrow] has been used to save the cleaned data in parquet form. The data was downloaded from Open Data Toronto that refreshed daily and collected using SolarTO Map. With the cleaning process, observations with NA values and address that is not found by the software are removed from the data set. Multiple linear regression model are being used to find the relationship between first year bill savings with other factors.
 
 ## Clean Data
 
@@ -111,28 +112,18 @@ The outcome variable in this paper is first year bill savings that it represents
 
 **System Cost(system_cost)**: The upfront cost of the solar PV system in dollars. The System Cost is based on the System Size and the average solar installation rates in Toronto. A estimated $/Watt rate ranging from $3/watt to $2,2/watt (dependent on system size) is applied to calculate cost.
 
+@fig-SC shows that distribution of system cost, the majority of the system cost is around 15000 dollars, and minority of system is cost more than 27000. The graph has no general trend and the price of any system is possible. The system cost exhibits randomness.
 ```{r}
 #| label: fig-SC
-#| fig-cap: "Distribution the Majority of System Cost "
+#| fig-cap: "Distribution of System Cost"
 #| echo: false
 #| warning: false
 
-# Calculate the mean of system_cost
-mean_system_cost <- mean(analysis_data$system_cost, na.rm = TRUE)
-
-# Filter rows where system_cost is below the mean
-filtered_data <- analysis_data %>%
-  filter(system_cost < mean_system_cost)
-
-
-# Load necessary library
-library(ggplot2)
 
 # Create the bar plot for system_cost in the filtered data
-ggplot(filtered_data, aes(x = system_cost)) +
+ggplot(analysis_data, aes(x = system_cost)) +
   geom_bar(fill = "skyblue", color = "black") +
   labs(
-    title = "Distribution of System Cost Below the Mean",
     x = "System Cost",
     y = "Count of Structures"
   ) +
@@ -215,14 +206,14 @@ g4
 
 The roof size refers to the total area capable of receiving at least 800 kWh of solar radiation per square meter. To maximize the efficiency of the solar photovoltaic (PV) system, it is assumed that the entire roof area will be utilized for system installation. It is further assumed that as the roof size increases, the system size will also increase proportionally. As demonstrated in @fig-SSAEG and @fig-SSAE, there is a clear positive relationship between system size, annual electricity generation, and annual greenhouse gas (GHG) reduction. Specifically, larger PV systems generate more electricity than smaller systems, leading to a reduction in electricity consumption from alternative sources. Consequently, this results in a greater annual GHG reduction for larger systems.
 
-In @fig-roof and @fig-roo, it is observed that the payback period is not directly correlated with system size. While the cost of larger systems is higher, these systems also generate more electricity, leading to greater savings on electricity bills. However, the number of years required to recover the initial investment through bill savings remains relatively consistent, regardless of system size.
+In @fig-roof and @fig-roo, it is observed that the payback period is not directly correlated with system size. While the cost of larger systems is higher, these systems also generate more electricity, leading to greater savings on electricity bills. The number of years required to recover the initial investment through bill savings is also related to the system size, even payback period differed from same system size, but larger system size is having a trend to have shorter payback period.
 
 
 # Model{#sec-model}
 
-The multiple linear model is generated to investigate the relationships between annual billing savings and predictor system cost, roof size and payback period. These predictors are selected for significance in influencing the change of the annual billing savings and the other predictors are reduced by insignificance.
+The multiple linear regression model is generated to investigate the relationships between annual billing savings and predictor system cost, roof size and payback period. These predictors are selected for significance in influencing the change of the annual billing savings and the other predictors are reduced by insignificance.
 
-Here we briefly describe the multiple linear regression model used to investigate the relationship. Background details and diagnostics are included in [Appendix -@sec-model-details].
+Here we briefly describe the multiple linear regression model used to investigate the relationship. 
 
 ## Model set-up
 $$
@@ -268,7 +259,7 @@ ggplot(data = analysis_data, aes(x = system_size, y = residuals(mlr_model))) +
 
 
 ```
-In @fig-residual, we can inspect the relationship between the residuals and fitted values. The scatter plot of residuals versus fitted value shows no pattern on the graph but some of the outliers. It still shows that the model has the linearity assumption not violated
+In @fig-residual, we can inspect the relationship between the residuals and fitted values. The scatter plot of residuals versus fitted value shows no pattern on the graph but it has a lot of outliers, the model is violating the assumption on linearity.
 
 ```{r}
 #| label: tbl-bptest
@@ -351,9 +342,9 @@ model_summary <- tidy(mlr_model)
 kable(model_summary)
 ```
 
-As shown in @tbl-model-summary the summary of the model, the predictor payback period has a $p-value < 2 \times 10^{-16}$ and an estimate -112.40506927 indicates that it has a strong negative relationship suggests shorter payback periods are associated with greater first-year billing savings. System cost also has a $p-value < 2 \times 10^{-16}$ and has estimate equals to 0.04678 which indicates that it has a positive relationship with the response variable, higher system cost tend to generate more first-year savings.
+As shown in @tbl-model-summary the summary of the model, the predictor payback period has a $p-value < 2 \times 10^{-16}$ and an estimate -57.2082431 indicates that it has a strong negative relationship suggests shorter payback periods are associated with greater first-year billing savings. System cost also has a $p-value < 2 \times 10^{-16}$ and has estimate equals to 0.0358037 which indicates that it has a positive relationship with the response variable, higher system cost tend to generate more first-year savings.
 
-Annual electricity generation has a p-value $ 0.0338 < 0.05$ that it has a weaker positive association suggests that the more electricity the system saves, more first year bill saving is obtained.
+Annual electricity generation has a p-value 0.0338 < 0.05 that it has a weaker positive association suggests that the more electricity the system saves, more first year bill saving is obtained.
 
 Predictors roof size ($p-value = 0.1882$) and annual GHG reduction ($p-value = 0.6953$) are both having $p-value > 0.05$. These two predictors are not strongly associated with the response variable in this dataset.
 
@@ -429,7 +420,7 @@ kable(column_summary, col.names = c('Column Name', 'Description'), booktabs = TR
 ```
 
 
-# How SolarTO Map Calculate Data
+# Methodology of SolarTO Map Calculating Data
 
 **Input Data**
 
